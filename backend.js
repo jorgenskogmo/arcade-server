@@ -1,6 +1,9 @@
 /**
  * simple tickets and highscore backend for the aracade games
  *
+ * Notes:
+ * The term "lives" is used interchangeably with "tries", "attempts"
+ *
  * ## Coupons
  *
  * GET /coupons/new            Show Create Coupons UI
@@ -9,8 +12,13 @@
  *
  *
  * ## Highscores
+ *
  * GET /highscores/list?game={gamename}
  * GET /highscores/add?game={gamename}&player={name}&score={score}
+ *
+ * ## QR Codes
+ *
+ * GET /qr/verify?code={uid}
  */
 
 const fs = require("node:fs");
@@ -31,6 +39,22 @@ const dataroot = path.join(__dirname, "data");
 const qrroot = path.join(__dirname, "qrs");
 
 //
+// QR
+app.get("/qr/verify", (req, res) => {
+  const code = req.query.code;
+  console.log("/qr/verify code:", code);
+
+  // TODO: actually verify...
+
+  res.end(
+    JSON.stringify({
+      message: "accept",
+      data: { player: "jorgen-acc", lives: 9 },
+    })
+  );
+});
+
+//
 // Coupons
 
 app.get("/coupons/create", (req, res) => {
@@ -38,6 +62,8 @@ app.get("/coupons/create", (req, res) => {
   const count = req.query.count | 5;
   const lives = req.query.lives | 3;
   // const auth = req.query.auth;
+
+  // TODO: player (name) must be uniqe
 
   const data = uid(); // length: 11, 'c92054d1dd6'
   const date = format(new Date(), "yyMMdd-Hms");
@@ -120,7 +146,7 @@ app.get("/highscores/add", (req, res) => {
     );
     return;
   }
-  console.log("listing highscores for game", game);
+  console.log("adding score to game:", game);
   const data = loadHighscores(game);
   // fix: if the player has saved the same points, ignore
   // fix: or maybe: discard the old, save the new?
@@ -130,6 +156,8 @@ app.get("/highscores/add", (req, res) => {
     (entry) => entry.player === player && entry.score === score
   );
   saveHighscores(game, ordered_data);
+
+  // TODO: update (decrease) $lives left for this player
 
   const entries = ordered_data.length - 1;
   let message = `Your placed: ${place + 1}${ordinal_suffix(place + 1)}`; // 1st, 2nd, 3rd, 4th.
