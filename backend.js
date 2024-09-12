@@ -39,7 +39,7 @@ const dataroot = path.join(__dirname, "data");
 const qrroot = path.join(__dirname, "qrs");
 
 //
-// QR
+// QR code validation
 app.get("/qr/verify", (req, res) => {
   const code = req.query.code;
   console.log("/qr/verify code:", code);
